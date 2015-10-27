@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+
+<canvas id="myCanvas" width="600" height="400" style="border:1px solid #c3c3c3;" onclick="run=(!run);redraw();">
+Your browser does not support the canvas element.
+</canvas>
+<div id="resdiv"></div>
+
+<script type="text/javascript">
+
+var fgcolor = "50,50,150";
+var bgcolor = "192,225,192";
+var fadelen = 10;
+var pi2 = 2.0*Math.PI;
+var run = false;
+var width2 = 300;
+var deltat = .05; //seconds
+var iter = 0;
+var objid = 0;
+var resdiv,restxt;
+
+function hist(){
+this.dots = [];
+this.push = function (_d){
+if(this.dots.push(_d) > fadelen)this.dots.shift().erase();
+return this;}
+this.draw = function (p){
+var l = this.dots.length-1;
+for(i=0;i<l;i++){this.dots[i].draw(p,i/l);}
+return this.dots[l];}
+}
+
+function shrub(_x,_y,_r){
+	this.id = objid++;
+	this.c = [_x,_y];
+	this.r = _r;
+	this.bb = [_x-_r/2,_y-_r/2,_r,_r];
+	this.draw = function(a){drawdot(this.c,this.r,rgb(128,192,128));return this;};
+	this.update = function(dt){return this;};
+}
+
+function tree(_x,_y,_r){
+  this.id = objid++;
+  this.c = [_x,_y];
+  this.p = dot2poly(this.c,_r,8);
+	this.r = _r;
+	this.bb = [_x-_r/8,_y-_r/8,_r/4,_r/4];
+	this.draw = function(){
+		//drawdot(this.c,this.r,rgb(128,192,128));
+		drawpoly(this.p,rgb(128,192,128));
+		drawdot(this.c,this.r/4,rgb(128,64,64));
+		return this;};
+	this.update = function(dt){return this;};
+}
+
+function fence(_x1,_y1,_x2,_y2){
+	this.id = objid++;
+	this.b = [_x1,_y1];
+	this.e = [_x2,_y2];
+	this.bb = [Math.min(_x1,_x2),Math.min(_y1,_y2),Math.max(_x1,_x2),Math.max(_y1,_y2)];
+	this.draw = function(){drawdot(this.c,this.r,rgb(128,192,128));return this;};
+	this.update = function(dt){return this;};
+}
+
+function wanderette(_x,_y,_t){
+  this.c = [_x,_y];
+  this.t = _t;
+  this.draw = function(p,a){
+    cxt.save();
+    cxt.translate(this.c[0],this.c[1]);
+    cxt.rotate(this.t);
+    drawpoly(p,rgb(128,192,128,a||1.0));
+    cxt.restore()
+    return this;}
+  this.update = function(dt){return this;};
+}
+
+function wanderer(_x,_y,_t,_vmax){
+  this.id = objid++;
+  this.c = [_x,_y];
+  this.p = [0,0,-5,-3.7,0,5,5,-3.7];
+  this.t = _t;
+  this.vmax = _vmax;
+  this.bb = [_x-5,_y-5,10,10];
+  this.h = new hist();
+  this.draw = function(){return this.h.draw(this.p);}
+  this.update = function(dt){
+    var newx = this.r.v*Math.sin(this.t.v);
+    var newy = this.y + (this.r.v*Math.cos(this.t.v) - this.r.v);
+    var newt = 
+    this.h.push(new wanderette(newx,newy,newt));
+    this.c = [newx,newy];
+    this.t = newt;
+  }
+return this;}
+
+
+this.update = function(dt){
+this.a.update(dt);
+this.r.update(dt);
+this.t.m = this.a.v/this.r.v;
+this.t.update(dt);
+var newx = this.r.v*Math.sin(this.t.v);
+var newy = this.y + (this.r.v*Math.cos(this.t.v) - this.r.v);
+this.h.push(new dot(newx,newy));
+return this;}
+
+}
+
+function drawdot(c,r,rgb){
+ cxt.fillStyle=rgb;
+ cxt.beginPath();
+ cxt.arc(c[0],c[1],r,0,Math.PI*2,true);
+ cxt.closePath();
+ cxt.fill();
+ return true;
+}
+
+function drawpoly(p,rgb){
+ cxt.fillStyle=rgb;
+ cxt.beginPath();
+ cxt.moveTo(p[0],p[1]);
+ for(var i=2;i<p.length;i+=2) cxt.lineTo(p[i],p[i+1]);
+ cxt.closePath();
+ cxt.fill();
+ return true;
+}
+
+function dot2poly(c,r,s){
+  var x=c[0],y=c[1],th=pi2/s;
+  var p=[x+r,y];
+  for(var i=1;i<s;i++){
+    p.push(x+r*Math.cos(i*th));
+    p.push(y+r*Math.sin(i*th));
+  }
+  return p;
+}
+
+
+function redraw(){
+	iter += 1;
+	restxt = "";
+	cxt.fillStyle="rgba(" + bgcolor + ",0.2)";
+  cxt.fillRect(0,0,2*width2,400);
+ for(var i=0;i<stuff.length;i++){
+ 	var o = stuff[i];
+ 	restxt += ("iter:"+iter+" i:"+i+" o.id:"+o.id+"</br>");
+ 	o.update(deltat).draw()
+ 	};
+ resdiv.innerHTML=restxt;
+ if(run)setTimeout(redraw,1000*deltat);
+}
+function rgb(r,g,b){return rgba(r,g,b,1.0);}
+
+function rgba(r,g,b,a){
+ return "rgba(" + r.toString() + "," +
+         g.toString() + "," +
+         b.toString() + "," +
+         a.toString() + ")";}
+         
+resdiv=document.getElementById("resdiv");
+var c=document.getElementById("myCanvas");
+width2 = c.width/2;
+var cxt=c.getContext("2d");
+cxt.fillStyle="rgb(" + bgcolor + ")";
+cxt.fillRect(0,0,2*width2,400);
+var stuff = [];
+stuff.push( new shrub(100,100,20) );
+stuff.push( new shrub(140,120,25) );
+stuff.push( new tree(200,200,60) );
+stuff.push( new tree(250,100,50) );
+stuff.push( new tree(100,180,40) );
+run = true;
+redraw();
+
+
+
+</script>
+
+</body>
+</html>
