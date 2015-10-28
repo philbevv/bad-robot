@@ -20,6 +20,10 @@ var iter = 0;
 var objid = 0;
 var resdiv,restxt;
 
+window.Game = {};
+
+function limit(v,max,min){return Math.min(Math.max(min,v),max);}
+
 function hist(){
 this.dots = [];
 this.push = function (_d){
@@ -95,19 +99,6 @@ function wanderer(_x,_y,_t,_vmax){
   }
 return this;}
 
-
-this.update = function(dt){
-this.a.update(dt);
-this.r.update(dt);
-this.t.m = this.a.v/this.r.v;
-this.t.update(dt);
-var newx = this.r.v*Math.sin(this.t.v);
-var newy = this.y + (this.r.v*Math.cos(this.t.v) - this.r.v);
-this.h.push(new dot(newx,newy));
-return this;}
-
-}
-
 function drawdot(c,r,rgb){
  cxt.fillStyle=rgb;
  cxt.beginPath();
@@ -141,8 +132,9 @@ function dot2poly(c,r,s){
 function redraw(){
 	iter += 1;
 	restxt = "";
+	cxt.setTransform(1,0,0,1,0,0);
 	cxt.fillStyle="rgba(" + bgcolor + ",0.2)";
-  cxt.fillRect(0,0,2*width2,400);
+  	cxt.fillRect(0,0,2*width2,400);
  for(var i=0;i<stuff.length;i++){
  	var o = stuff[i];
  	restxt += ("iter:"+iter+" i:"+i+" o.id:"+o.id+"</br>");
@@ -158,7 +150,92 @@ function rgba(r,g,b,a){
          g.toString() + "," +
          b.toString() + "," +
          a.toString() + ")";}
-         
+     
+
+Game.controls = {
+    left: false, cleft: false,
+    up: false, cup: false,
+    right: false, cright: false,
+    down: false, cdown: false,
+    zoomin: false, zoomout: false
+};
+
+window.addEventListener("keydown", function(e){
+//alert(e.keyCode);
+    switch(e.keyCode)
+    {
+        case 37: // left arrow
+            Game.controls.left = true;
+            break;
+        case 38: // up arrow
+            Game.controls.up = true;
+            break;
+        case 39: // right arrow
+            Game.controls.right = true;
+            break;
+        case 40: // down arrow
+            Game.controls.down = true;
+            break;
+	case 65: // a
+            Game.controls.cleft = true;
+            break;
+        case 87: // w
+            Game.controls.cup = true;
+            break;
+        case 68: // d
+            Game.controls.cright = true;
+            break;
+        case 83: // s
+            Game.controls.cdown = true;
+            break;
+        case 188: // <
+            Game.controls.zoomin = true;
+            break;
+        case 190: // >
+            Game.controls.zoomout = true;
+            break;
+    }
+}, false);
+
+window.addEventListener("keyup", function(e){
+    switch(e.keyCode)
+    {
+        case 37: // left arrow
+            Game.controls.left = false;
+            break;
+        case 38: // up arrow
+            Game.controls.up = false;
+            break;
+        case 39: // right arrow
+            Game.controls.right = false;
+            break;
+        case 40: // down arrow
+            Game.controls.down = false;
+            break;
+        case 80: // key P pauses the game
+            Game.togglePause();
+            break;   
+	case 65: // a
+            Game.controls.cleft = false;
+            break;
+        case 87: // w
+            Game.controls.cup = false;
+            break;
+        case 68: // d
+            Game.controls.cright = false;
+            break;
+        case 83: // s
+            Game.controls.cdown = false;
+            break;
+        case 188: // <
+            Game.controls.zoomin = false;
+            break;
+        case 190: // >
+            Game.controls.zoomout = false;
+            break;   
+    }
+}, false);
+
 resdiv=document.getElementById("resdiv");
 var c=document.getElementById("myCanvas");
 width2 = c.width/2;
